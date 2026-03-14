@@ -5,13 +5,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { Colors } from "@/constants/theme";
 
 // Returns time-based greeting string
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return "Good Morning,";
-  if (hour >= 12 && hour < 17) return "Good Afternoon,";
-  if (hour >= 17 && hour < 21) return "Good Evening,";
-  return "Good Night,";
-}
+import { getGreeting } from "@/utils/getGreeting.util";
 
 export default function ProfileHeader() {
   const isSyncing = false;
