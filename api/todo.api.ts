@@ -31,11 +31,15 @@ export type CreateTodoPayload = {
 export type UpdateTodoPayload = Partial<Omit<Todo, "id">>;
 
 export const getTodos = async (): Promise<Todo[]> => {
-  const response = await axiosInstance.get<Todo[]>("/todo");
-  return response.data.map((t) => ({
-    ...t,
-    status: t.status === "Completed" ? "Completed" : "Pending",
-  }));
+
+  try {
+    const response = await axiosInstance.get<Todo[]>("/todo");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching todos:", error);
+    throw error;
+  }
+
 };
 
 export const getTodo = async (id: string): Promise<Todo> => {
