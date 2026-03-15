@@ -1,37 +1,12 @@
+import type { CreateTodoPayload, Todo, TodoStatus, UpdateTodoPayload } from "@/types/Todo.type";
 import axiosInstance from "./axiosInstance";
 
-export type TodoPriority = "Low" | "Medium" | "High";
-export type TodoStatus = "Pending" | "Completed";
-export type TodoCategory = "Patients" | "Personal" | "Work";
-
-export type Todo = {
-  id: string;
-  title: string;
-  description: string;
-  priority: TodoPriority;
-  status: TodoStatus;
-  category?: TodoCategory;
-  dueDate?: string;
-  owner?: string;
-  location?: string;
-  createdAt?: string;
-  updatedAt?: string;
-};
-
-export type CreateTodoPayload = {
-  title: string;
-  description: string;
-  priority: TodoPriority;
-  status: TodoStatus;
-  category?: TodoCategory;
-  dueDate?: string;
-  owner?: string;
-};
-
-export type UpdateTodoPayload = Partial<Omit<Todo, "id">>;
+export type {
+  CreateTodoPayload, Todo, TodoCategory, TodoPriority,
+  TodoStatus, UpdateTodoPayload
+} from "@/types/Todo.type";
 
 export const getTodos = async (): Promise<Todo[]> => {
-
   try {
     const response = await axiosInstance.get<Todo[]>("/todo");
     return response.data;
@@ -39,7 +14,6 @@ export const getTodos = async (): Promise<Todo[]> => {
     console.error("Error fetching todos:", error);
     throw error;
   }
-
 };
 
 export const getTodo = async (id: string): Promise<Todo> => {
@@ -62,6 +36,9 @@ export const deleteTodo = async (id: string): Promise<void> => {
 };
 
 export const updateTodoStatus = async (id: string, status: TodoStatus): Promise<Todo> => {
-  const response = await axiosInstance.put<Todo>(`/todo/${id}`, { status });
+  const response = await axiosInstance.put<Todo>(`/todo/${id}`, {
+    status,
+    completed: status === "Completed",
+  });
   return response.data;
 };

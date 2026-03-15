@@ -5,7 +5,8 @@ import {
   updateTodo,
   type CreateTodoPayload,
 } from "@/api/todo.api";
-import type { LocalTodo, SyncStatus } from "@/store/localTodo";
+import { LocalTodo, SyncStatus } from "@/types/Todo.type";
+
 
 /**
  * Upload every todo whose syncStatus === "pending".

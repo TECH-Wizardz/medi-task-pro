@@ -2,16 +2,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-import {
-  createTodo,
-  updateTodo,
-  updateTodoStatus,
-  type CreateTodoPayload,
-  type TodoStatus,
-  type UpdateTodoPayload,
+import type {
+  CreateTodoPayload,
+  TodoStatus,
+  UpdateTodoPayload,
 } from "@/api/todo.api";
-import type { LocalTodo } from "@/store/localTodo";
 import { syncAll } from "@/store/syncService";
+import { LocalTodo } from "@/types/Todo.type";
 
 interface TodoState {
   todos: LocalTodo[];
@@ -21,10 +18,10 @@ interface TodoState {
 
 interface TodoActions {
   fetchTodos: () => Promise<void>;
-  addTodo: (payload: CreateTodoPayload) => Promise<void>;
-  editTodo: (id: string, payload: UpdateTodoPayload) => Promise<void>;
+  addTodo: (payload: CreateTodoPayload) => void;
+  editTodo: (id: string, payload: UpdateTodoPayload) => void;
   removeTodo: (id: string) => void;
-  toggleStatus: (id: string) => Promise<void>;
+  toggleStatus: (id: string) => void;
   syncWithServer: () => Promise<void>;
 }
 
@@ -43,60 +40,37 @@ const useTodoStore = create<TodoStore>()(
           const synced = await syncAll(get().todos);
           set({ todos: synced, isLoading: false });
         } catch (e) {
-          set({ isLoading: false, error: (e as Error).message });
+          set({ isLoading: false, error: e instanceof Error ? e.message : "Fetch failed" });
         }
       },
 
-      addTodo: async (payload: CreateTodoPayload) => {
-        const tempId = `local_${Date.now()}`;
+      addTodo: (payload: CreateTodoPayload) => {
         const optimistic: LocalTodo = {
-          id: tempId,
+          id: `local_${Date.now()}`,
           ...payload,
           syncStatus: "pending",
+          completed: payload.status === "Completed",
         };
-
         set((state) => ({ todos: [optimistic, ...state.todos] }));
-
-        try {
-          const serverTodo = await createTodo(payload);
-          set((state) => ({
-            todos: state.todos.map((t) =>
-              t.id === tempId ? { ...serverTodo, syncStatus: "synced" } : t
-            ),
-          }));
-        } catch {
-          // Stays "pending" — syncWithServer will retry
-        }
       },
 
-      editTodo: async (id: string, payload: UpdateTodoPayload) => {
+      editTodo: (id: string, payload: UpdateTodoPayload) => {
         set((state) => ({
           todos: state.todos.map((t) =>
-            t.id === id ? { ...t, ...payload, syncStatus: "pending" } : t
+            t.id === id ? { ...t, ...payload, syncStatus: "pending" as const } : t
           ),
         }));
-
-        try {
-          const serverTodo = await updateTodo(id, payload);
-          set((state) => ({
-            todos: state.todos.map((t) =>
-              t.id === id ? { ...serverTodo, syncStatus: "synced" } : t
-            ),
-          }));
-        } catch {
-          // Stays "pending"
-        }
       },
 
       removeTodo: (id: string) => {
         set((state) => ({
           todos: state.todos.map((t) =>
-            t.id === id ? { ...t, syncStatus: "deleted" } : t
+            t.id === id ? { ...t, syncStatus: "deleted" as const } : t
           ),
         }));
       },
 
-      toggleStatus: async (id: string) => {
+      toggleStatus: (id: string) => {
         const todo = get().todos.find((t) => t.id === id);
         if (!todo) return;
 
@@ -106,21 +80,10 @@ const useTodoStore = create<TodoStore>()(
         set((state) => ({
           todos: state.todos.map((t) =>
             t.id === id
-              ? { ...t, status: nextStatus, syncStatus: "pending" }
+              ? { ...t, status: nextStatus, completed: nextStatus === "Completed", syncStatus: "pending" as const }
               : t
           ),
         }));
-
-        try {
-          await updateTodoStatus(id, nextStatus);
-          set((state) => ({
-            todos: state.todos.map((t) =>
-              t.id === id ? { ...t, syncStatus: "synced" } : t
-            ),
-          }));
-        } catch {
-          // Stays "pending"
-        }
       },
 
       syncWithServer: async () => {
@@ -129,7 +92,10 @@ const useTodoStore = create<TodoStore>()(
           const synced = await syncAll(get().todos);
           set({ todos: synced, isLoading: false });
         } catch (e) {
-          set({ isLoading: false, error: (e as Error).message });
+          set({
+            isLoading: false,
+            error: e instanceof Error ? e.message : "Sync failed",
+          });
           throw e;
         }
       },

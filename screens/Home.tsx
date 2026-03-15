@@ -6,13 +6,13 @@ import { AppColors } from "@/constants/theme";
 
 import type { TodoPriority } from "@/api/todo.api";
 import FilterTagsContainer from "@/components/header/FilterTagContainer";
-import FloatingActionButton from "@/components/ui/floating-action-button";
 import ProfileHeader from "@/components/header/ProfileHeader";
 import ProgressBar from "@/components/header/ProgressBar";
 import TaskModal from "@/components/tasks/TaskModal";
 import TasksContainer from "@/components/tasks/TasksContainer";
-import type { LocalTodo } from "@/store/localTodo";
+import FloatingActionButton from "@/components/ui/floating-action-button";
 import useTodoStore from "@/store/useTodoStore";
+import { LocalTodo } from "@/types/Todo.type";
 
 const FILTER_TAGS = ["All", "Low", "Medium", "High"] as const;
 type FilterTag = (typeof FILTER_TAGS)[number];

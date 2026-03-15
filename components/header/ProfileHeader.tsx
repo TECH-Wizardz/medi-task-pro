@@ -1,49 +1,93 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
-import { StyleSheet, Text, View } from "react-native";
+import { useEffect } from "react";
+import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, {
+  cancelAnimation,
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 
-import { Colors } from "@/constants/theme";
-
-// Returns time-based greeting string
+import { toast } from "@/components/ui/Toast";
+import { AppColors, Colors } from "@/constants/theme";
+import { useAutoSync } from "@/hooks/use-auto-sync";
+import useTodoStore from "@/store/useTodoStore";
 import { getGreeting } from "@/utils/getGreeting.util";
 
 export default function ProfileHeader() {
-  const isSyncing = false;
+  useAutoSync();
+
+  const todos = useTodoStore((s) => s.todos);
+  const isLoading = useTodoStore((s) => s.isLoading);
+  const syncWithServer = useTodoStore((s) => s.syncWithServer);
+
+  const hasPending = todos.some(
+    (t) => t.syncStatus === "pending" || t.syncStatus === "deleted",
+  );
+  const isSyncing = hasPending || isLoading;
+
+  const rotation = useSharedValue(0);
+
+  useEffect(() => {
+    if (isLoading) {
+      rotation.value = withRepeat(
+        withTiming(360, { duration: 1200, easing: Easing.linear }),
+        -1,
+      );
+    } else {
+      cancelAnimation(rotation);
+      rotation.value = 0;
+    }
+    // rotation is a stable shared value ref — safe to omit from deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading]);
+
+  const spinStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${rotation.value}deg` }],
+  }));
+
+  async function handleManualSync() {
+    try {
+      await syncWithServer();
+      toast.show("All tasks synced successfully", "success");
+    } catch {
+      toast.show("Sync failed. Will retry when online.", "error");
+    }
+  }
 
   return (
     <View style={styles.container}>
-      {/* Profile avatar — replace source with dynamic user image URI when auth is ready */}
       <Image
         source={require("@/assets/icons/profile.png")}
         style={styles.avatar}
         contentFit="cover"
       />
-
       <View style={styles.textContainer}>
-        {/* Greeting changes based on time of day */}
         <Text style={styles.greeting}>{getGreeting()}</Text>
-
-        {/* TODO: replace "Dr. Nimal" with user name from auth/store */}
         <Text style={styles.name}>Dr. Nimal</Text>
       </View>
 
-      {/* Sync status badge — shows spinner when syncing, cloud-done when idle */}
-      <View style={styles.syncBadge}>
+      <Pressable
+        style={styles.syncBadge}
+        onPress={hasPending ? handleManualSync : undefined}
+        hitSlop={8}
+        disabled={isLoading}
+      >
         {isSyncing ? (
-          // TODO: wrap in Animated.View with rotation animation while syncing
-          <Ionicons
-            name="sync-outline"
-            size={24}
-            color={Colors.light.warning}
-          />
+          <Animated.View style={spinStyle}>
+            <Ionicons name="sync-outline" size={24} color={AppColors.warning} />
+          </Animated.View>
         ) : (
           <Ionicons
             name="cloud-done-outline"
             size={24}
-            color={Colors.light.success}
+            color={AppColors.success}
           />
         )}
-      </View>
+      </Pressable>
     </View>
   );
 }
@@ -72,7 +116,6 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 18,
     fontWeight: "700",
-    color: Colors.light.text,
   },
   syncBadge: {
     width: 36,
