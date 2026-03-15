@@ -2,17 +2,20 @@ import { useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
 import FilterTag from "@/components/header/FilterTag";
+import { TodoStatus } from "@/types/Todo.type";
+
+type StatusFilter = TodoStatus | "All";
+
+const TAGS: StatusFilter[] = ["All", "Pending", "Completed"];
 
 type Props = {
-  tags: string[];
-
-  onSelect?: (tag: string) => void;
+  onSelect?: (filter: StatusFilter) => void;
 };
 
-export default function FilterTagsContainer({ tags, onSelect }: Props) {
-  const [active, setActive] = useState<string>(tags[0]);
+export default function FilterTagsContainer({ onSelect }: Props) {
+  const [active, setActive] = useState<StatusFilter>("All");
 
-  function handlePress(tag: string) {
+  function handlePress(tag: StatusFilter) {
     setActive(tag);
     onSelect?.(tag);
   }
@@ -24,7 +27,7 @@ export default function FilterTagsContainer({ tags, onSelect }: Props) {
       contentContainerStyle={styles.content}
       style={styles.container}
     >
-      {tags.map((tag) => (
+      {TAGS.map((tag) => (
         <FilterTag
           key={tag}
           label={tag}

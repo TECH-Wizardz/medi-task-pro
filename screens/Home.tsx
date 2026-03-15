@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AppColors } from "@/constants/theme";
 
-import type { TodoPriority } from "@/api/todo.api";
 import FilterTagsContainer from "@/components/header/FilterTagContainer";
 import ProfileHeader from "@/components/header/ProfileHeader";
 import ProgressBar from "@/components/header/ProgressBar";
@@ -12,10 +11,9 @@ import TaskModal from "@/components/tasks/TaskModal";
 import TasksContainer from "@/components/tasks/TasksContainer";
 import FloatingActionButton from "@/components/ui/floating-action-button";
 import useTodoStore from "@/store/useTodoStore";
-import { LocalTodo } from "@/types/Todo.type";
+import { LocalTodo, TodoStatus } from "@/types/Todo.type";
 
-const FILTER_TAGS = ["All", "Low", "Medium", "High"] as const;
-type FilterTag = (typeof FILTER_TAGS)[number];
+type StatusFilter = TodoStatus | "All";
 
 function getTodosProgress(todos: LocalTodo[]) {
   const visible = todos.filter((t) => t.syncStatus !== "deleted");
@@ -28,7 +26,7 @@ function getTodosProgress(todos: LocalTodo[]) {
 
 export default function HomeScreen() {
   const { todos, fetchTodos } = useTodoStore();
-  const [activeFilter, setActiveFilter] = useState<FilterTag>("All");
+  const [activeStatus, setActiveStatus] = useState<StatusFilter>("All");
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTodo, setEditingTodo] = useState<LocalTodo | undefined>(
     undefined,
@@ -41,9 +39,9 @@ export default function HomeScreen() {
   const { completed, total, visible } = getTodosProgress(todos);
 
   const filtered =
-    activeFilter === "All"
+    activeStatus === "All"
       ? visible
-      : visible.filter((t) => t.priority === (activeFilter as TodoPriority));
+      : visible.filter((t) => t.status === activeStatus);
 
   function handleOpenCreate() {
     setEditingTodo(undefined);
@@ -62,10 +60,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <ProfileHeader />
       <ProgressBar completed={completed} total={total} />
-      <FilterTagsContainer
-        tags={[...FILTER_TAGS]}
-        onSelect={(tag) => setActiveFilter(tag as FilterTag)}
-      />
+      <FilterTagsContainer onSelect={setActiveStatus} />
       <TasksContainer tasks={filtered} onEditRequest={handleEditRequest} />
       <FloatingActionButton onPress={handleOpenCreate} />
       <TaskModal
