@@ -1,16 +1,16 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useState,
-} from 'react';
-import { useColorScheme as useSystemColorScheme } from 'react-native';
+} from "react";
+import { useColorScheme as useSystemColorScheme } from "react-native";
 
-import { ColorScheme, Colors, ThemeColors } from '@/constants/theme';
+import { ColorScheme, Colors, ThemeColors } from "@/constants/theme";
 
-const STORAGE_KEY = '@theme_preference';
+const STORAGE_KEY = "@theme_preference";
 
 interface ThemeContextValue {
   scheme: ColorScheme;
@@ -21,13 +21,13 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const systemScheme = useSystemColorScheme() ?? 'light';
+  const systemScheme = useSystemColorScheme() ?? "light";
   const [scheme, setScheme] = useState<ColorScheme>(systemScheme);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem(STORAGE_KEY).then((stored) => {
-      if (stored === 'light' || stored === 'dark') {
+      if (stored === "light" || stored === "dark") {
         setScheme(stored);
       }
       setHydrated(true);
@@ -36,7 +36,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const toggleTheme = useCallback(() => {
     setScheme((prev) => {
-      const next: ColorScheme = prev === 'light' ? 'dark' : 'light';
+      const next: ColorScheme = prev === "light" ? "dark" : "light";
       AsyncStorage.setItem(STORAGE_KEY, next);
       return next;
     });
@@ -45,7 +45,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   if (!hydrated) return null;
 
   return (
-    <ThemeContext.Provider value={{ scheme, colors: Colors[scheme], toggleTheme }}>
+    <ThemeContext.Provider
+      value={{ scheme, colors: Colors[scheme], toggleTheme }}
+    >
       {children}
     </ThemeContext.Provider>
   );
@@ -53,6 +55,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useAppTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error('useAppTheme must be used inside ThemeProvider');
+  if (!ctx) throw new Error("useAppTheme must be used inside ThemeProvider");
   return ctx;
 }

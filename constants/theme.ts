@@ -48,31 +48,53 @@ const palette = {
   blue600:      '#2563EB',
   blue50:       '#EFF6FF',
   blue900:      '#1E3A5F',   // primaryBg dark
+  blue800:      '#1E3A8A',   // primaryBg dark (readable)
 
   // Semantic – green
   green500:     '#22C55E',
   green50:      '#DCFCE7',
   green900:     '#14532D',   // successBg dark
+  green800:     '#166534',   // successBg dark (readable)
 
   // Semantic – amber
   amber500:     '#F59E0B',
   amber50:      '#FEF3C7',
   amber900:     '#78350F',   // warningBg dark
+  amber800:     '#92400E',   // warningBg dark (readable)
 
   // Semantic – red
   red500:       '#EF4444',
   red50:        '#FEE2E2',
   red900:       '#7F1D1D',   // errorBg dark
+  red800:       '#991B1B',   // errorBg dark (readable)
 
   // Accent – purple
   purple500:    '#8B5CF6',
   purple50:     '#F5F3FF',
   purple900:    '#3B0764',   // purpleBg dark
+  purple800:    '#5B21B6',   // purpleBg dark (readable)
 
   // Accent – orange
   orange500:    '#F97316',
   orange50:     '#FFF7ED',
   orange900:    '#431407',   // orangeBg dark
+  orange800:    '#9A3412',   // orangeBg dark (readable)
+
+  // Light shades – used as tag text in dark mode (high contrast on dark bg)
+  red300:       '#FCA5A5',
+  amber300:     '#FCD34D',
+  green300:     '#86EFAC',
+  blue300:      '#93C5FD',
+  violet300:    '#C4B5FD',
+  orange300:    '#FDBA74',
+
+  // Dark tag backgrounds – clearly coloured on card bg (#1A1F2E)
+  tagRedDark:    '#3B0F0F',
+  tagAmberDark:  '#3B2008',
+  tagGreenDark:  '#0A3D1F',
+  tagBlueDark:   '#0F2750',
+  tagPurpleDark: '#250D52',
+  tagOrangeDark: '#3B1A06',
 
   // Overlays & shadows
   overlayLight: 'rgba(0,0,0,0.4)',
@@ -119,6 +141,22 @@ export const Colors = {
     orange:       palette.orange500,  // Work category text
     orangeBg:     palette.orange50,   // Work category badge bg
 
+    // Tag pairs – priority badges
+    tagHighBg:       palette.red50,       // HIGH priority badge bg
+    tagHighText:     palette.red500,      // HIGH priority badge text
+    tagMedBg:        palette.amber50,     // MEDIUM priority badge bg
+    tagMedText:      palette.amber500,    // MEDIUM priority badge text
+    tagLowBg:        palette.green50,     // LOW priority badge bg
+    tagLowText:      palette.green500,    // LOW priority badge text
+
+    // Tag pairs – category badges
+    tagPatientsBg:   palette.blue50,      // Patients badge bg
+    tagPatientsText: palette.blue500,     // Patients badge text
+    tagPersonalBg:   palette.purple50,    // Personal badge bg
+    tagPersonalText: palette.purple500,   // Personal badge text
+    tagWorkBg:       palette.orange50,    // Work badge bg
+    tagWorkText:     palette.orange500,   // Work badge text
+
     // UI chrome
     background:   palette.white,
     cardBg:       palette.white,
@@ -152,21 +190,37 @@ export const Colors = {
     primary:      palette.blue400,    // brand blue, FAB, active tag, gradient start
     primaryDark:  palette.blue500,    // submit button, date confirm text
     primaryLight: palette.blue400,    // gradient end
-    primaryBg:    palette.blue900,    // Patients category badge bg
+    primaryBg:    palette.blue800,    // Patients category badge bg
 
     // Semantic
     success:      palette.green500,   // low priority, synced icon, checkbox checked
-    successBg:    palette.green900,   // low priority badge bg
+    successBg:    palette.green800,   // low priority badge bg
     warning:      palette.amber500,   // medium priority, sync pending icon
-    warningBg:    palette.amber900,   // medium priority badge bg
+    warningBg:    palette.amber800,   // medium priority badge bg
     error:        palette.red500,     // high priority, delete, error states
-    errorBg:      palette.red900,     // high priority badge bg
+    errorBg:      palette.red800,     // high priority badge bg
 
     // Category / accent
     purple:       palette.purple500,  // Personal category text
-    purpleBg:     palette.purple900,  // Personal category badge bg
+    purpleBg:     palette.purple800,  // Personal category badge bg
     orange:       palette.orange500,  // Work category text
-    orangeBg:     palette.orange900,  // Work category badge bg
+    orangeBg:     palette.orange800,  // Work category badge bg
+
+    // Tag pairs – priority badges (dark: deep tinted bg + light text for readability)
+    tagHighBg:       palette.tagRedDark,   // HIGH priority badge bg
+    tagHighText:     palette.red300,       // HIGH priority badge text
+    tagMedBg:        palette.tagAmberDark, // MEDIUM priority badge bg
+    tagMedText:      palette.amber300,     // MEDIUM priority badge text
+    tagLowBg:        palette.tagGreenDark, // LOW priority badge bg
+    tagLowText:      palette.green300,     // LOW priority badge text
+
+    // Tag pairs – category badges (dark: deep tinted bg + light text for readability)
+    tagPatientsBg:   palette.tagBlueDark,   // Patients badge bg
+    tagPatientsText: palette.blue300,       // Patients badge text
+    tagPersonalBg:   palette.tagPurpleDark, // Personal badge bg
+    tagPersonalText: palette.violet300,     // Personal badge text
+    tagWorkBg:       palette.tagOrangeDark, // Work badge bg
+    tagWorkText:     palette.orange300,     // Work badge text
 
     // UI chrome
     background:   palette.surface,
@@ -184,7 +238,7 @@ export const Colors = {
 } as const;
 
 export type ColorScheme = keyof typeof Colors;
-export type ThemeColors = typeof Colors.light;
+export type ThemeColors = typeof Colors[ColorScheme];
 
 /** Flat alias for light-scheme tokens — used by components that don't need dynamic theming. */
 export const AppColors = Colors.light;

@@ -66,15 +66,27 @@ export default function TaskCard({
     Priority,
     { bg: string; text: string; border: string }
   > = {
-    HIGH: { bg: colors.errorBg, text: colors.error, border: colors.error },
-    MEDIUM: { bg: colors.warningBg, text: colors.warning, border: colors.warning },
-    LOW: { bg: colors.successBg, text: colors.success, border: colors.success },
+    HIGH: {
+      bg: colors.tagHighBg,
+      text: colors.tagHighText,
+      border: colors.tagHighBg,
+    },
+    MEDIUM: {
+      bg: colors.tagMedBg,
+      text: colors.tagMedText,
+      border: colors.tagMedBg,
+    },
+    LOW: {
+      bg: colors.tagLowBg,
+      text: colors.tagLowText,
+      border: colors.tagLowBg,
+    },
   };
 
   const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-    Patients: { bg: colors.primaryBg, text: colors.primary },
-    Personal: { bg: colors.purpleBg, text: colors.purple },
-    Work: { bg: colors.orangeBg, text: colors.orange },
+    Patients: { bg: colors.tagPatientsBg, text: colors.tagPatientsText },
+    Personal: { bg: colors.tagPersonalBg, text: colors.tagPersonalText },
+    Work: { bg: colors.tagWorkBg, text: colors.tagWorkText },
   };
 
   const [expanded, setExpanded] = useState(false);
@@ -151,122 +163,132 @@ export default function TaskCard({
   const hasFooter = category || dueDate || owner;
 
   return (
-    <View style={styles.swipeWrapper}>
-      {/* Blue edit background — revealed on swipe right */}
-      <Animated.View style={[styles.actionBg, styles.editBg, editBgAnimStyle]}>
-        <Ionicons name="create-outline" size={22} color={colors.white} />
-      </Animated.View>
-      {/* Red delete background — revealed on swipe left */}
-      <Animated.View
-        style={[styles.actionBg, styles.deleteBg, deleteBgAnimStyle]}
-      >
-        <Ionicons name="trash-outline" size={22} color={colors.white} />
-      </Animated.View>
+    <View style={styles.shadowWrapper}>
+      <View style={styles.swipeWrapper}>
+        {/* Blue edit background — revealed on swipe right */}
+        <Animated.View
+          style={[styles.actionBg, styles.editBg, editBgAnimStyle]}
+        >
+          <Ionicons name="create-outline" size={22} color={colors.white} />
+        </Animated.View>
+        {/* Red delete background — revealed on swipe left */}
+        <Animated.View
+          style={[styles.actionBg, styles.deleteBg, deleteBgAnimStyle]}
+        >
+          <Ionicons name="trash-outline" size={22} color={colors.white} />
+        </Animated.View>
 
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={[styles.card, cardAnimStyle]}>
-          {/* Header */}
-          <View style={styles.header}>
-            <View style={[styles.badge, { backgroundColor: p.bg }]}>
-              <Text style={[styles.badgeText, { color: p.text }]}>
-                {priority}
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={[styles.card, cardAnimStyle]}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={[styles.badge, { backgroundColor: p.bg }]}>
+                <Text style={[styles.badgeText, { color: p.text }]}>
+                  {priority}
+                </Text>
+              </View>
+              {description ? (
+                <Pressable onPress={toggle} hitSlop={8}>
+                  <Animated.View style={chevronStyle}>
+                    <Ionicons
+                      name="chevron-down"
+                      size={20}
+                      color={colors.gray400}
+                    />
+                  </Animated.View>
+                </Pressable>
+              ) : null}
+            </View>
+
+            {/* Title */}
+            <View style={styles.titleRow}>
+              <Pressable onPress={toggleCheck} hitSlop={8}>
+                <View
+                  style={[styles.checkbox, completed && styles.checkboxChecked]}
+                >
+                  <Animated.View style={checkFillStyle}>
+                    <Ionicons name="checkmark" size={13} color={colors.white} />
+                  </Animated.View>
+                </View>
+              </Pressable>
+              <Text style={[styles.title, completed && styles.titleCompleted]}>
+                {title}
               </Text>
             </View>
+
+            {/* Description (animated expand/collapse) */}
             {description ? (
-              <Pressable onPress={toggle} hitSlop={8}>
-                <Animated.View style={chevronStyle}>
-                  <Ionicons
-                    name="chevron-down"
-                    size={20}
-                    color={colors.gray400}
-                  />
-                </Animated.View>
-              </Pressable>
-            ) : null}
-          </View>
-
-          {/* Title */}
-          <View style={styles.titleRow}>
-            <Pressable onPress={toggleCheck} hitSlop={8}>
-              <View
-                style={[styles.checkbox, completed && styles.checkboxChecked]}
+              <Animated.View
+                style={[
+                  styles.descriptionBlock,
+                  { borderLeftColor: p.border },
+                  descStyle,
+                ]}
               >
-                <Animated.View style={checkFillStyle}>
-                  <Ionicons
-                    name="checkmark"
-                    size={13}
-                    color={colors.white}
-                  />
-                </Animated.View>
+                <Text style={styles.description}>{description}</Text>
+              </Animated.View>
+            ) : null}
+
+            {/* Footer */}
+            {hasFooter ? (
+              <View style={styles.footer}>
+                {category && catStyle ? (
+                  <View
+                    style={[
+                      styles.categoryChip,
+                      { backgroundColor: catStyle.bg },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.categoryText, { color: catStyle.text }]}
+                    >
+                      {category}
+                    </Text>
+                  </View>
+                ) : null}
+                {dueDate ? (
+                  <View style={styles.metaItem}>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={12}
+                      color={colors.gray400}
+                    />
+                    <Text style={styles.metaText}>{formatDate(dueDate)}</Text>
+                  </View>
+                ) : null}
+                {owner ? (
+                  <View style={styles.metaItem}>
+                    <Ionicons
+                      name="person-outline"
+                      size={12}
+                      color={colors.gray400}
+                    />
+                    <Text style={styles.metaText}>{owner}</Text>
+                  </View>
+                ) : null}
               </View>
-            </Pressable>
-            <Text style={[styles.title, completed && styles.titleCompleted]}>
-              {title}
-            </Text>
-          </View>
-
-          {/* Description (animated expand/collapse) */}
-          {description ? (
-            <Animated.View
-              style={[
-                styles.descriptionBlock,
-                { borderLeftColor: p.border },
-                descStyle,
-              ]}
-            >
-              <Text style={styles.description}>{description}</Text>
-            </Animated.View>
-          ) : null}
-
-          {/* Footer */}
-          {hasFooter ? (
-            <View style={styles.footer}>
-              {category && catStyle ? (
-                <View
-                  style={[
-                    styles.categoryChip,
-                    { backgroundColor: catStyle.bg },
-                  ]}
-                >
-                  <Text style={[styles.categoryText, { color: catStyle.text }]}>
-                    {category}
-                  </Text>
-                </View>
-              ) : null}
-              {dueDate ? (
-                <View style={styles.metaItem}>
-                  <Ionicons
-                    name="calendar-outline"
-                    size={12}
-                    color={colors.gray400}
-                  />
-                  <Text style={styles.metaText}>{formatDate(dueDate)}</Text>
-                </View>
-              ) : null}
-              {owner ? (
-                <View style={styles.metaItem}>
-                  <Ionicons
-                    name="person-outline"
-                    size={12}
-                    color={colors.gray400}
-                  />
-                  <Text style={styles.metaText}>{owner}</Text>
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-        </Animated.View>
-      </GestureDetector>
+            ) : null}
+          </Animated.View>
+        </GestureDetector>
+      </View>
     </View>
   );
 }
 
 function createStyles(colors: ThemeColors) {
   return StyleSheet.create({
-    swipeWrapper: {
-      position: "relative",
+    shadowWrapper: {
       marginHorizontal: 16,
       marginVertical: 6,
+      borderRadius: 12,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
+      elevation: 4,
+    },
+    swipeWrapper: {
+      position: "relative",
       borderRadius: 12,
       overflow: "hidden",
     },
@@ -301,11 +323,6 @@ function createStyles(colors: ThemeColors) {
       borderColor: colors.slate100,
       padding: 16,
       gap: 12,
-      shadowColor: colors.shadow,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 1,
     },
     header: {
       flexDirection: "row",

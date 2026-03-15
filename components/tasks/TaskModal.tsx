@@ -27,6 +27,7 @@ import { ThemeColors } from "@/constants/theme";
 import { useAppTheme } from "@/context/ThemeContext";
 import useTodoStore from "@/store/useTodoStore";
 import { LocalTodo } from "@/types/Todo.type";
+import { formatDateLabel } from "@/utils/formatDateLabel.util";
 
 type FormValues = {
   title: string;
@@ -40,7 +41,6 @@ type FormValues = {
 type Props = {
   visible: boolean;
   onClose: () => void;
-  /** Pass an existing todo to switch to edit mode. Omit for create mode. */
   todo?: LocalTodo;
 };
 
@@ -59,16 +59,6 @@ const schema = Yup.object({
 
 const PRIORITIES: TodoPriority[] = ["High", "Medium", "Low"];
 const CATEGORIES: TodoCategory[] = ["Personal", "Work", "Patients"];
-
-function formatDateLabel(isoDate: string): string {
-  if (!isoDate) return "";
-  const d = new Date(isoDate + "T00:00:00");
-  return d.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
 
 export default function TaskModal({ visible, onClose, todo }: Props) {
   const addTodo = useTodoStore((s) => s.addTodo);
@@ -121,12 +111,9 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
         owner: todo?.owner ?? "",
       });
     }
-    // reset is stable; we intentionally key on todo.id + visible to avoid
-    // resetting mid-edit when the store updates the todo reference
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, todo?.id, reset]);
+  }, [visible, todo, reset]);
 
-  async function onSubmit(values: FormValues) {
+  function onSubmit(values: FormValues) {
     const payload: CreateTodoPayload | UpdateTodoPayload = {
       title: values.title,
       description: values.description,
@@ -138,9 +125,9 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
     };
 
     if (isEdit && todo) {
-      await editTodo(todo.id, payload as UpdateTodoPayload);
+      editTodo(todo.id, payload as UpdateTodoPayload);
     } else {
-      await addTodo(payload as CreateTodoPayload);
+      addTodo(payload as CreateTodoPayload);
     }
 
     reset();
@@ -205,7 +192,11 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Description */}
-            <Field label="Description" error={errors.description?.message} colors={colors}>
+            <Field
+              label="Description"
+              error={errors.description?.message}
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="description"
@@ -230,7 +221,11 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Priority */}
-            <Field label="Priority" error={errors.priority?.message} colors={colors}>
+            <Field
+              label="Priority"
+              error={errors.priority?.message}
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="priority"
@@ -273,7 +268,11 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Category */}
-            <Field label="Category" error={errors.category?.message} colors={colors}>
+            <Field
+              label="Category"
+              error={errors.category?.message}
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="category"
@@ -313,7 +312,11 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Due Date */}
-            <Field label="Due Date (optional)" error={errors.dueDate?.message} colors={colors}>
+            <Field
+              label="Due Date (optional)"
+              error={errors.dueDate?.message}
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="dueDate"
@@ -391,7 +394,11 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Owner */}
-            <Field label="Owner (optional)" error={errors.owner?.message} colors={colors}>
+            <Field
+              label="Owner (optional)"
+              error={errors.owner?.message}
+              colors={colors}
+            >
               <Controller
                 control={control}
                 name="owner"
