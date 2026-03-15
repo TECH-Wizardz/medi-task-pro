@@ -7,6 +7,7 @@ import type {
   TodoStatus,
   UpdateTodoPayload,
 } from "@/api/todo.api";
+import { toast } from "@/components/ui/Toast";
 import { syncAll } from "@/store/syncService";
 import { LocalTodo } from "@/types/Todo.type";
 
@@ -41,6 +42,7 @@ const useTodoStore = create<TodoStore>()(
           set({ todos: synced, isLoading: false });
         } catch (e) {
           set({ isLoading: false, error: e instanceof Error ? e.message : "Fetch failed" });
+          toast.show("Failed to load tasks. Please try again.", "error");
         }
       },
 

@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { FlatList, StyleSheet, View } from "react-native";
+import { FlatList, RefreshControl, StyleSheet, View } from "react-native";
 
 import ConfirmationModal from "@/components/ConfirmationModal";
 import TaskCard from "@/components/tasks/TaskCard";
-import type { LocalTodo } from "@/store/localTodo";
 import useTodoStore from "@/store/useTodoStore";
+import { LocalTodo } from "@/types/Todo.type";
 
 type CardPriority = "LOW" | "MEDIUM" | "HIGH";
 
@@ -25,6 +25,8 @@ type Props = {
 export default function TasksContainer({ tasks, onEditRequest }: Props) {
   const toggleStatus = useTodoStore((s) => s.toggleStatus);
   const removeTodo = useTodoStore((s) => s.removeTodo);
+  const fetchTodos = useTodoStore((s) => s.fetchTodos);
+  const isLoading = useTodoStore((s) => s.isLoading);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const PRIORITY_RANK: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
@@ -57,6 +59,9 @@ export default function TasksContainer({ tasks, onEditRequest }: Props) {
         keyExtractor={(item) => item.id}
         style={styles.container}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={fetchTodos} />
+        }
         renderItem={({ item }) => (
           <TaskCard
             id={item.id}
