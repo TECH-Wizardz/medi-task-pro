@@ -1,5 +1,4 @@
 import TaskCardOption from "@/components/tasks/TaskCardOption";
-import { toast } from "@/components/ui/Toast";
 import { AppColors } from "@/constants/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
@@ -87,10 +86,6 @@ export default function TaskCard({
   function toggleCheck() {
     checkProgress.value = withTiming(completed ? 0 : 1, TIMING);
     onToggle(id);
-    toast.show(
-      completed ? "Task marked incomplete" : "Task completed!",
-      "success",
-    );
   }
 
   const chevronStyle = useAnimatedStyle(() => ({
@@ -142,7 +137,6 @@ export default function TaskCard({
         onDelete={() => {
           setMenuOpen(false);
           onDelete(id);
-          toast.show("Task deleted", "success");
         }}
       />
 

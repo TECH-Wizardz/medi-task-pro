@@ -1,6 +1,6 @@
-import DateTimePicker from "@react-native-community/datetimepicker";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { yupResolver } from "@hookform/resolvers/yup";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -22,10 +22,10 @@ import type {
   TodoPriority,
   UpdateTodoPayload,
 } from "@/api/todo.api";
-import type { LocalTodo } from "@/store/localTodo";
-import { toast } from "@/components/ui/Toast";
+
 import { AppColors } from "@/constants/theme";
 import useTodoStore from "@/store/useTodoStore";
+import { LocalTodo } from "@/types/Todo.type";
 
 type FormValues = {
   title: string;
@@ -135,10 +135,8 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
 
     if (isEdit && todo) {
       await editTodo(todo.id, payload as UpdateTodoPayload);
-      toast.show("Task updated successfully", "success");
     } else {
       await addTodo(payload as CreateTodoPayload);
-      toast.show("Task added successfully", "success");
     }
 
     reset();
@@ -355,9 +353,13 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                     {showDatePicker && (
                       <View style={styles.datePickerWrapper}>
                         <DateTimePicker
-                          value={value ? new Date(value + "T00:00:00") : new Date()}
+                          value={
+                            value ? new Date(value + "T00:00:00") : new Date()
+                          }
                           mode="date"
-                          display={Platform.OS === "ios" ? "spinner" : "default"}
+                          display={
+                            Platform.OS === "ios" ? "spinner" : "default"
+                          }
                           minimumDate={new Date()}
                           onChange={(event, selected) => {
                             if (Platform.OS === "android") {
