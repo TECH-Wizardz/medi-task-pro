@@ -186,6 +186,9 @@ export const Colors = {
 export type ColorScheme = keyof typeof Colors;
 export type ThemeColors = typeof Colors.light;
 
+/** Flat alias for light-scheme tokens — used by components that don't need dynamic theming. */
+export const AppColors = Colors.light;
+
 // ─────────────────────────────────────────────
 // Font stacks
 // ─────────────────────────────────────────────
