@@ -11,12 +11,12 @@ import useTodoStore from "@/store/useTodoStore";
  */
 export function useAutoSync() {
   const syncWithServer = useTodoStore((s) => s.syncWithServer);
-  const isLoading = useTodoStore((s) => s.isLoading);
   const todos = useTodoStore((s) => s.todos);
 
   // Track previous connectivity so we only sync on transition offline → online
   const wasOnlineRef = useRef<boolean | null>(null);
   const isOnlineRef = useRef<boolean>(false);
+  const isSyncingRef = useRef<boolean>(false);
 
   useEffect(() => {
     const unsubscribe = NetInfo.addEventListener((state) => {
@@ -46,15 +46,17 @@ export function useAutoSync() {
   // Sync when pending tasks appear while already online
   useEffect(() => {
     if (!isOnlineRef.current) return;
-    if (isLoading) return;
+    if (isSyncingRef.current) return;
 
     const hasPending = todos.some(
       (t) => t.syncStatus === "pending" || t.syncStatus === "deleted"
     );
     if (!hasPending) return;
 
+    isSyncingRef.current = true;
     syncWithServer()
       .then(() => toast.show("All tasks synced successfully", "success"))
-      .catch(() => toast.show("Sync failed. Will retry when online.", "error"));
-  }, [todos, isLoading, syncWithServer]);
+      .catch(() => toast.show("Sync failed. Will retry when online.", "error"))
+      .finally(() => { isSyncingRef.current = false; });
+  }, [todos, syncWithServer]);
 }

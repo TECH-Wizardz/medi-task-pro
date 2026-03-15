@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { yupResolver } from "@hookform/resolvers/yup";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   KeyboardAvoidingView,
@@ -23,7 +23,8 @@ import type {
   UpdateTodoPayload,
 } from "@/api/todo.api";
 
-import { AppColors } from "@/constants/theme";
+import { ThemeColors } from "@/constants/theme";
+import { useAppTheme } from "@/context/ThemeContext";
 import useTodoStore from "@/store/useTodoStore";
 import { LocalTodo } from "@/types/Todo.type";
 
@@ -59,18 +60,6 @@ const schema = Yup.object({
 const PRIORITIES: TodoPriority[] = ["High", "Medium", "Low"];
 const CATEGORIES: TodoCategory[] = ["Personal", "Work", "Patients"];
 
-const PRIORITY_COLOR: Record<TodoPriority, string> = {
-  High: AppColors.error,
-  Medium: AppColors.warning,
-  Low: AppColors.success,
-};
-
-const CATEGORY_COLOR: Record<TodoCategory, string> = {
-  Personal: AppColors.primary,
-  Work: AppColors.orange,
-  Patients: AppColors.purple,
-};
-
 function formatDateLabel(isoDate: string): string {
   if (!isoDate) return "";
   const d = new Date(isoDate + "T00:00:00");
@@ -85,6 +74,21 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
   const addTodo = useTodoStore((s) => s.addTodo);
   const editTodo = useTodoStore((s) => s.editTodo);
   const isEdit = !!todo;
+
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const PRIORITY_COLOR: Record<TodoPriority, string> = {
+    High: colors.error,
+    Medium: colors.warning,
+    Low: colors.success,
+  };
+
+  const CATEGORY_COLOR: Record<TodoCategory, string> = {
+    Personal: colors.primary,
+    Work: colors.orange,
+    Patients: colors.purple,
+  };
 
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -172,7 +176,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
               {isEdit ? "Edit Task" : "Add New Task"}
             </Text>
             <Pressable onPress={handleClose} hitSlop={8}>
-              <Ionicons name="close" size={22} color={AppColors.gray500} />
+              <Ionicons name="close" size={22} color={colors.gray500} />
             </Pressable>
           </View>
 
@@ -182,7 +186,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             showsVerticalScrollIndicator={false}
           >
             {/* Title */}
-            <Field label="Title" error={errors.title?.message}>
+            <Field label="Title" error={errors.title?.message} colors={colors}>
               <Controller
                 control={control}
                 name="title"
@@ -190,7 +194,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                   <TextInput
                     style={[styles.input, errors.title && styles.inputError]}
                     placeholder="e.g., Surgery consultation"
-                    placeholderTextColor={AppColors.gray400}
+                    placeholderTextColor={colors.gray400}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -201,7 +205,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Description */}
-            <Field label="Description" error={errors.description?.message}>
+            <Field label="Description" error={errors.description?.message} colors={colors}>
               <Controller
                 control={control}
                 name="description"
@@ -213,7 +217,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                       errors.description && styles.inputError,
                     ]}
                     placeholder="Add details about the task..."
-                    placeholderTextColor={AppColors.gray400}
+                    placeholderTextColor={colors.gray400}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -226,7 +230,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Priority */}
-            <Field label="Priority" error={errors.priority?.message}>
+            <Field label="Priority" error={errors.priority?.message} colors={colors}>
               <Controller
                 control={control}
                 name="priority"
@@ -244,8 +248,8 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                             {
                               backgroundColor: selected
                                 ? `${color}20`
-                                : AppColors.gray50,
-                              borderColor: selected ? color : AppColors.gray200,
+                                : colors.gray50,
+                              borderColor: selected ? color : colors.gray200,
                             },
                           ]}
                         >
@@ -255,7 +259,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                           <Text
                             style={[
                               styles.chipText,
-                              { color: selected ? color : AppColors.gray500 },
+                              { color: selected ? color : colors.gray500 },
                             ]}
                           >
                             {p}
@@ -269,7 +273,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Category */}
-            <Field label="Category" error={errors.category?.message}>
+            <Field label="Category" error={errors.category?.message} colors={colors}>
               <Controller
                 control={control}
                 name="category"
@@ -287,15 +291,15 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                             {
                               backgroundColor: selected
                                 ? `${color}18`
-                                : AppColors.gray50,
-                              borderColor: selected ? color : AppColors.gray200,
+                                : colors.gray50,
+                              borderColor: selected ? color : colors.gray200,
                             },
                           ]}
                         >
                           <Text
                             style={[
                               styles.chipText,
-                              { color: selected ? color : AppColors.gray500 },
+                              { color: selected ? color : colors.gray500 },
                             ]}
                           >
                             {c}
@@ -309,7 +313,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Due Date */}
-            <Field label="Due Date (optional)" error={errors.dueDate?.message}>
+            <Field label="Due Date (optional)" error={errors.dueDate?.message} colors={colors}>
               <Controller
                 control={control}
                 name="dueDate"
@@ -322,7 +326,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                       <Ionicons
                         name="calendar-outline"
                         size={16}
-                        color={AppColors.gray500}
+                        color={colors.gray500}
                       />
                       <Text
                         style={[
@@ -344,7 +348,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                           <Ionicons
                             name="close-circle"
                             size={16}
-                            color={AppColors.gray400}
+                            color={colors.gray400}
                           />
                         </Pressable>
                       ) : null}
@@ -387,7 +391,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
             </Field>
 
             {/* Owner */}
-            <Field label="Owner (optional)" error={errors.owner?.message}>
+            <Field label="Owner (optional)" error={errors.owner?.message} colors={colors}>
               <Controller
                 control={control}
                 name="owner"
@@ -395,7 +399,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                   <TextInput
                     style={styles.input}
                     placeholder="e.g. Dr. Smith"
-                    placeholderTextColor={AppColors.gray400}
+                    placeholderTextColor={colors.gray400}
                     value={value}
                     onChangeText={onChange}
                     onBlur={onBlur}
@@ -424,7 +428,7 @@ export default function TaskModal({ visible, onClose, todo }: Props) {
                   isEdit ? "checkmark-circle-outline" : "add-circle-outline"
                 }
                 size={18}
-                color={AppColors.white}
+                color={colors.white}
                 style={styles.submitIcon}
               />
               <Text style={styles.submitText}>
@@ -442,11 +446,14 @@ function Field({
   label,
   error,
   children,
+  colors,
 }: {
   label: string;
   error?: string;
   children: React.ReactNode;
+  colors: ThemeColors;
 }) {
+  const styles = useMemo(() => createFieldStyles(colors), [colors]);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
@@ -456,183 +463,190 @@ function Field({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: "flex-end",
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: AppColors.overlay,
-  },
-  sheet: {
-    backgroundColor: AppColors.cardBg,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: "90%",
-    paddingBottom: Platform.OS === "ios" ? 34 : 16,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: AppColors.gray200,
-    alignSelf: "center",
-    marginTop: 10,
-    marginBottom: 4,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: AppColors.slate100,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: AppColors.gray900,
-  },
-  body: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 8,
-    gap: 20,
-  },
-  field: {
-    gap: 8,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: AppColors.gray700,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: AppColors.gray200,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: AppColors.gray900,
-    backgroundColor: AppColors.offWhite,
-  },
-  textArea: {
-    minHeight: 100,
-  },
-  inputError: {
-    borderColor: AppColors.error,
-  },
-  errorText: {
-    fontSize: 12,
-    color: AppColors.error,
-  },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    gap: 6,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  dateBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    borderWidth: 1,
-    borderColor: AppColors.gray200,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: AppColors.offWhite,
-  },
-  dateBtnText: {
-    flex: 1,
-    fontSize: 15,
-    color: AppColors.gray900,
-  },
-  datePlaceholder: {
-    color: AppColors.gray400,
-  },
-  dateClear: {
-    padding: 2,
-  },
-  datePickerWrapper: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: AppColors.gray200,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: AppColors.offWhite,
-  },
-  dateConfirmBtn: {
-    alignItems: "flex-end",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: AppColors.gray200,
-  },
-  dateConfirmText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: AppColors.primaryDark,
-  },
-  footer: {
-    flexDirection: "row",
-    gap: 10,
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    borderTopWidth: 1,
-    borderTopColor: AppColors.slate100,
-  },
-  cancelBtn: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: "center",
-    backgroundColor: AppColors.gray100,
-  },
-  cancelText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: AppColors.gray700,
-  },
-  submitBtn: {
-    flex: 2,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: AppColors.primaryDark,
-    borderRadius: 12,
-    paddingVertical: 14,
-    gap: 6,
-  },
-  submitBtnDisabled: {
-    opacity: 0.5,
-  },
-  submitIcon: {
-    marginRight: 2,
-  },
-  submitText: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: AppColors.white,
-  },
-});
+function createFieldStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    field: {
+      gap: 8,
+    },
+    label: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: colors.gray700,
+    },
+    errorText: {
+      fontSize: 12,
+      color: colors.error,
+    },
+  });
+}
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: "flex-end",
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: colors.overlay,
+    },
+    sheet: {
+      backgroundColor: colors.cardBg,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: "90%",
+      paddingBottom: Platform.OS === "ios" ? 34 : 16,
+    },
+    handle: {
+      width: 40,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.gray200,
+      alignSelf: "center",
+      marginTop: 10,
+      marginBottom: 4,
+    },
+    header: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.slate100,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: colors.gray900,
+    },
+    body: {
+      paddingHorizontal: 20,
+      paddingTop: 20,
+      paddingBottom: 8,
+      gap: 20,
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: colors.gray200,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: colors.gray900,
+      backgroundColor: colors.offWhite,
+    },
+    textArea: {
+      minHeight: 100,
+    },
+    inputError: {
+      borderColor: colors.error,
+    },
+    chipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    chip: {
+      flexDirection: "row",
+      alignItems: "center",
+      borderWidth: 1.5,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      gap: 6,
+    },
+    dot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+    },
+    chipText: {
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    dateBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      borderWidth: 1,
+      borderColor: colors.gray200,
+      borderRadius: 12,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: colors.offWhite,
+    },
+    dateBtnText: {
+      flex: 1,
+      fontSize: 15,
+      color: colors.gray900,
+    },
+    datePlaceholder: {
+      color: colors.gray400,
+    },
+    dateClear: {
+      padding: 2,
+    },
+    datePickerWrapper: {
+      marginTop: 8,
+      borderWidth: 1,
+      borderColor: colors.gray200,
+      borderRadius: 12,
+      overflow: "hidden",
+      backgroundColor: colors.offWhite,
+    },
+    dateConfirmBtn: {
+      alignItems: "flex-end",
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderTopWidth: 1,
+      borderTopColor: colors.gray200,
+    },
+    dateConfirmText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: colors.primaryDark,
+    },
+    footer: {
+      flexDirection: "row",
+      gap: 10,
+      paddingHorizontal: 20,
+      paddingTop: 14,
+      borderTopWidth: 1,
+      borderTopColor: colors.slate100,
+    },
+    cancelBtn: {
+      flex: 1,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: "center",
+      backgroundColor: colors.gray100,
+    },
+    cancelText: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: colors.gray700,
+    },
+    submitBtn: {
+      flex: 2,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.primaryDark,
+      borderRadius: 12,
+      paddingVertical: 14,
+      gap: 6,
+    },
+    submitBtnDisabled: {
+      opacity: 0.5,
+    },
+    submitIcon: {
+      marginRight: 2,
+    },
+    submitText: {
+      fontSize: 15,
+      fontWeight: "700",
+      color: colors.white,
+    },
+  });
+}

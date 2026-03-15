@@ -1,29 +1,40 @@
 import {
   DarkTheme,
   DefaultTheme,
-  ThemeProvider,
-} from "@react-navigation/native";
-import { Stack } from "expo-router";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import "react-native-reanimated";
+  ThemeProvider as NavThemeProvider,
+} from '@react-navigation/native';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import 'react-native-reanimated';
 
-import Toast from "@/components/ui/Toast";
-import { useColorScheme } from "@/hooks/use-color-scheme";
+import Toast from '@/components/ui/Toast';
+import { ThemeProvider, useAppTheme } from '@/context/ThemeContext';
 
 export const unstable_settings = {
-  anchor: "(tabs)",
+  anchor: '(tabs)',
 };
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function NavigationThemeAdapter({ children }: { children: React.ReactNode }) {
+  const { scheme } = useAppTheme();
+  return (
+    <NavThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} translucent backgroundColor="transparent" />
+      {children}
+    </NavThemeProvider>
+  );
+}
 
+export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <Toast />
+      <ThemeProvider>
+        <NavigationThemeAdapter>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <Toast />
+        </NavigationThemeAdapter>
       </ThemeProvider>
     </GestureHandlerRootView>
   );

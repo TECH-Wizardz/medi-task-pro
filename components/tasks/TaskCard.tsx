@@ -1,6 +1,5 @@
-import { AppColors } from "@/constants/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -10,6 +9,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
+
+import { ThemeColors } from "@/constants/theme";
+import { useAppTheme } from "@/context/ThemeContext";
 
 type Priority = "LOW" | "MEDIUM" | "HIGH";
 
@@ -25,33 +27,6 @@ type Props = {
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (id: string) => void;
-};
-
-const PRIORITY_STYLES: Record<
-  Priority,
-  { bg: string; text: string; border: string }
-> = {
-  HIGH: {
-    bg: AppColors.errorBg,
-    text: AppColors.error,
-    border: AppColors.error,
-  },
-  MEDIUM: {
-    bg: AppColors.warningBg,
-    text: AppColors.warning,
-    border: AppColors.warning,
-  },
-  LOW: {
-    bg: AppColors.successBg,
-    text: AppColors.success,
-    border: AppColors.success,
-  },
-};
-
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Patients: { bg: AppColors.primaryBg, text: AppColors.primary },
-  Personal: { bg: AppColors.purpleBg, text: AppColors.purple },
-  Work: { bg: AppColors.orangeBg, text: AppColors.orange },
 };
 
 const TIMING = { duration: 250 };
@@ -84,6 +59,24 @@ export default function TaskCard({
   onDelete,
   onEdit,
 }: Props) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const PRIORITY_STYLES: Record<
+    Priority,
+    { bg: string; text: string; border: string }
+  > = {
+    HIGH: { bg: colors.errorBg, text: colors.error, border: colors.error },
+    MEDIUM: { bg: colors.warningBg, text: colors.warning, border: colors.warning },
+    LOW: { bg: colors.successBg, text: colors.success, border: colors.success },
+  };
+
+  const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
+    Patients: { bg: colors.primaryBg, text: colors.primary },
+    Personal: { bg: colors.purpleBg, text: colors.purple },
+    Work: { bg: colors.orangeBg, text: colors.orange },
+  };
+
   const [expanded, setExpanded] = useState(false);
   const progress = useSharedValue(0);
   const checkProgress = useSharedValue(completed ? 1 : 0);
@@ -91,8 +84,8 @@ export default function TaskCard({
   const p = PRIORITY_STYLES[priority];
   const catStyle = category
     ? (CATEGORY_COLORS[category] ?? {
-        bg: AppColors.gray100,
-        text: AppColors.gray500,
+        bg: colors.gray100,
+        text: colors.gray500,
       })
     : null;
 
@@ -161,13 +154,13 @@ export default function TaskCard({
     <View style={styles.swipeWrapper}>
       {/* Blue edit background — revealed on swipe right */}
       <Animated.View style={[styles.actionBg, styles.editBg, editBgAnimStyle]}>
-        <Ionicons name="create-outline" size={22} color={AppColors.white} />
+        <Ionicons name="create-outline" size={22} color={colors.white} />
       </Animated.View>
       {/* Red delete background — revealed on swipe left */}
       <Animated.View
         style={[styles.actionBg, styles.deleteBg, deleteBgAnimStyle]}
       >
-        <Ionicons name="trash-outline" size={22} color={AppColors.white} />
+        <Ionicons name="trash-outline" size={22} color={colors.white} />
       </Animated.View>
 
       <GestureDetector gesture={panGesture}>
@@ -185,7 +178,7 @@ export default function TaskCard({
                   <Ionicons
                     name="chevron-down"
                     size={20}
-                    color={AppColors.gray400}
+                    color={colors.gray400}
                   />
                 </Animated.View>
               </Pressable>
@@ -202,7 +195,7 @@ export default function TaskCard({
                   <Ionicons
                     name="checkmark"
                     size={13}
-                    color={AppColors.white}
+                    color={colors.white}
                   />
                 </Animated.View>
               </View>
@@ -245,7 +238,7 @@ export default function TaskCard({
                   <Ionicons
                     name="calendar-outline"
                     size={12}
-                    color={AppColors.gray400}
+                    color={colors.gray400}
                   />
                   <Text style={styles.metaText}>{formatDate(dueDate)}</Text>
                 </View>
@@ -255,7 +248,7 @@ export default function TaskCard({
                   <Ionicons
                     name="person-outline"
                     size={12}
-                    color={AppColors.gray400}
+                    color={colors.gray400}
                   />
                   <Text style={styles.metaText}>{owner}</Text>
                 </View>
@@ -268,130 +261,133 @@ export default function TaskCard({
   );
 }
 
-const styles = StyleSheet.create({
-  swipeWrapper: {
-    position: "relative",
-    marginHorizontal: 16,
-    marginVertical: 6,
-    borderRadius: 12,
-    overflow: "hidden",
-  },
-  actionBg: {
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-  },
-  editBg: {
-    backgroundColor: AppColors.primary,
-    justifyContent: "flex-start",
-    gap: 4,
-  },
-  deleteBg: {
-    backgroundColor: AppColors.error,
-    justifyContent: "flex-end",
-    gap: 4,
-  },
-  actionText: {
-    color: AppColors.white,
-    fontWeight: "700",
-    fontSize: 14,
-  },
-  card: {
-    backgroundColor: AppColors.cardBg,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: AppColors.slate100,
-    padding: 14,
-    gap: 10,
-    shadowColor: AppColors.shadow,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 6,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: AppColors.gray300,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxChecked: {
-    backgroundColor: AppColors.success,
-    borderColor: AppColors.success,
-  },
-  title: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: AppColors.gray900,
-    flexShrink: 1,
-  },
-  titleCompleted: {
-    textDecorationLine: "line-through",
-    color: AppColors.gray400,
-  },
-  descriptionBlock: {
-    borderLeftWidth: 3,
-    borderRadius: 6,
-    paddingLeft: 10,
-    marginTop: 2,
-  },
-  description: {
-    fontSize: 13,
-    lineHeight: 20,
-    color: AppColors.gray500,
-  },
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-    paddingTop: 2,
-    borderTopWidth: 1,
-    borderTopColor: AppColors.slate100,
-  },
-  categoryChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  categoryText: {
-    fontSize: 11,
-    fontWeight: "600",
-  },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 3,
-  },
-  metaText: {
-    fontSize: 11,
-    color: AppColors.gray400,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    swipeWrapper: {
+      position: "relative",
+      marginHorizontal: 16,
+      marginVertical: 6,
+      borderRadius: 12,
+      overflow: "hidden",
+    },
+    actionBg: {
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      width: "100%",
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 10,
+    },
+    editBg: {
+      backgroundColor: colors.primary,
+      justifyContent: "flex-start",
+      gap: 4,
+    },
+    deleteBg: {
+      backgroundColor: colors.error,
+      justifyContent: "flex-end",
+      gap: 4,
+    },
+    actionText: {
+      color: colors.white,
+      fontWeight: "700",
+      fontSize: 14,
+    },
+    card: {
+      backgroundColor: colors.cardBg,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: colors.slate100,
+      padding: 16,
+      gap: 12,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 1,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    badge: {
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 6,
+    },
+    badgeText: {
+      fontSize: 11,
+      fontWeight: "700",
+      letterSpacing: 0.5,
+    },
+    titleRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+      borderWidth: 2,
+      borderColor: colors.gray300,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    checkboxChecked: {
+      backgroundColor: colors.success,
+      borderColor: colors.success,
+    },
+    title: {
+      fontSize: 15,
+      fontWeight: "600",
+      color: colors.gray900,
+      flexShrink: 1,
+    },
+    titleCompleted: {
+      textDecorationLine: "line-through",
+      color: colors.gray400,
+    },
+    descriptionBlock: {
+      borderLeftWidth: 3,
+      borderRadius: 6,
+      paddingLeft: 12,
+      paddingVertical: 6,
+      marginTop: 2,
+    },
+    description: {
+      fontSize: 13,
+      lineHeight: 22,
+      color: colors.gray500,
+    },
+    footer: {
+      flexDirection: "row",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 8,
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: colors.slate100,
+    },
+    categoryChip: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 4,
+    },
+    categoryText: {
+      fontSize: 11,
+      fontWeight: "600",
+    },
+    metaItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 4,
+    },
+    metaText: {
+      fontSize: 11,
+      color: colors.gray400,
+    },
+  });
+}
