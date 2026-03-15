@@ -1,10 +1,11 @@
-import TaskCardOption from "@/components/tasks/TaskCardOption";
 import { AppColors } from "@/constants/theme";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   interpolate,
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -30,9 +31,21 @@ const PRIORITY_STYLES: Record<
   Priority,
   { bg: string; text: string; border: string }
 > = {
-  HIGH: { bg: AppColors.errorBg, text: AppColors.error, border: AppColors.error },
-  MEDIUM: { bg: AppColors.warningBg, text: AppColors.warning, border: AppColors.warning },
-  LOW: { bg: AppColors.successBg, text: AppColors.success, border: AppColors.success },
+  HIGH: {
+    bg: AppColors.errorBg,
+    text: AppColors.error,
+    border: AppColors.error,
+  },
+  MEDIUM: {
+    bg: AppColors.warningBg,
+    text: AppColors.warning,
+    border: AppColors.warning,
+  },
+  LOW: {
+    bg: AppColors.successBg,
+    text: AppColors.success,
+    border: AppColors.success,
+  },
 };
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
@@ -42,6 +55,9 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
 };
 
 const TIMING = { duration: 250 };
+const SCREEN_WIDTH = Dimensions.get("window").width;
+const SWIPE_THRESHOLD = SCREEN_WIDTH * 0.05;
+const CLAMP = SWIPE_THRESHOLD * 2;
 
 function formatDate(iso: string): string {
   try {
@@ -69,12 +85,15 @@ export default function TaskCard({
   onEdit,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const progress = useSharedValue(0);
   const checkProgress = useSharedValue(completed ? 1 : 0);
+  const translateX = useSharedValue(0);
   const p = PRIORITY_STYLES[priority];
   const catStyle = category
-    ? (CATEGORY_COLORS[category] ?? { bg: AppColors.gray100, text: AppColors.gray500 })
+    ? (CATEGORY_COLORS[category] ?? {
+        bg: AppColors.gray100,
+        text: AppColors.gray500,
+      })
     : null;
 
   function toggle() {
@@ -87,6 +106,25 @@ export default function TaskCard({
     checkProgress.value = withTiming(completed ? 0 : 1, TIMING);
     onToggle(id);
   }
+
+  const panGesture = Gesture.Pan()
+    .activeOffsetX([-10, 10])
+    .failOffsetY([-15, 15])
+    .onUpdate((e) => {
+      translateX.value = Math.max(-CLAMP, Math.min(CLAMP, e.translationX));
+    })
+    .onEnd(() => {
+      const tx = translateX.value;
+      if (tx >= SWIPE_THRESHOLD) {
+        translateX.value = withTiming(0, { duration: 220 });
+        runOnJS(onEdit)(id);
+      } else if (tx <= -SWIPE_THRESHOLD) {
+        translateX.value = withTiming(0, { duration: 220 });
+        runOnJS(onDelete)(id);
+      } else {
+        translateX.value = withTiming(0, { duration: 220 });
+      }
+    });
 
   const chevronStyle = useAnimatedStyle(() => ({
     transform: [
@@ -105,108 +143,169 @@ export default function TaskCard({
     transform: [{ scale: interpolate(checkProgress.value, [0, 1], [0.5, 1]) }],
   }));
 
+  const cardAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }],
+  }));
+
+  const editBgAnimStyle = useAnimatedStyle(() => ({
+    opacity: translateX.value > 0 ? 1 : 0,
+  }));
+
+  const deleteBgAnimStyle = useAnimatedStyle(() => ({
+    opacity: translateX.value < 0 ? 1 : 0,
+  }));
+
   const hasFooter = category || dueDate || owner;
 
   return (
-    <View style={styles.card}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={[styles.badge, { backgroundColor: p.bg }]}>
-          <Text style={[styles.badgeText, { color: p.text }]}>{priority}</Text>
-        </View>
-        <View style={styles.actions}>
-          {description ? (
-            <Pressable onPress={toggle} hitSlop={8}>
-              <Animated.View style={chevronStyle}>
-                <Ionicons name="chevron-down" size={20} color={AppColors.gray400} />
-              </Animated.View>
-            </Pressable>
-          ) : null}
-          <Pressable onPress={() => setMenuOpen(true)} hitSlop={8}>
-            <Ionicons name="ellipsis-vertical" size={20} color={AppColors.gray400} />
-          </Pressable>
-        </View>
-      </View>
-      <TaskCardOption
-        visible={menuOpen}
-        onClose={() => setMenuOpen(false)}
-        onEdit={() => {
-          setMenuOpen(false);
-          onEdit(id);
-        }}
-        onDelete={() => {
-          setMenuOpen(false);
-          onDelete(id);
-        }}
-      />
+    <View style={styles.swipeWrapper}>
+      {/* Blue edit background — revealed on swipe right */}
+      <Animated.View style={[styles.actionBg, styles.editBg, editBgAnimStyle]}>
+        <Ionicons name="create-outline" size={22} color={AppColors.white} />
+      </Animated.View>
+      {/* Red delete background — revealed on swipe left */}
+      <Animated.View
+        style={[styles.actionBg, styles.deleteBg, deleteBgAnimStyle]}
+      >
+        <Ionicons name="trash-outline" size={22} color={AppColors.white} />
+      </Animated.View>
 
-      {/* Title */}
-      <View style={styles.titleRow}>
-        <Pressable onPress={toggleCheck} hitSlop={8}>
-          <View style={[styles.checkbox, completed && styles.checkboxChecked]}>
-            <Animated.View style={checkFillStyle}>
-              <Ionicons name="checkmark" size={13} color={AppColors.white} />
-            </Animated.View>
-          </View>
-        </Pressable>
-        <Text style={[styles.title, completed && styles.titleCompleted]}>
-          {title}
-        </Text>
-      </View>
-
-      {/* Description (animated expand/collapse) */}
-      {description ? (
-        <Animated.View
-          style={[
-            styles.descriptionBlock,
-            { borderLeftColor: p.border },
-            descStyle,
-          ]}
-        >
-          <Text style={styles.description}>{description}</Text>
-        </Animated.View>
-      ) : null}
-
-      {/* Footer */}
-      {hasFooter ? (
-        <View style={styles.footer}>
-          {category && catStyle ? (
-            <View
-              style={[styles.categoryChip, { backgroundColor: catStyle.bg }]}
-            >
-              <Text style={[styles.categoryText, { color: catStyle.text }]}>
-                {category}
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={[styles.card, cardAnimStyle]}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={[styles.badge, { backgroundColor: p.bg }]}>
+              <Text style={[styles.badgeText, { color: p.text }]}>
+                {priority}
               </Text>
             </View>
+            {description ? (
+              <Pressable onPress={toggle} hitSlop={8}>
+                <Animated.View style={chevronStyle}>
+                  <Ionicons
+                    name="chevron-down"
+                    size={20}
+                    color={AppColors.gray400}
+                  />
+                </Animated.View>
+              </Pressable>
+            ) : null}
+          </View>
+
+          {/* Title */}
+          <View style={styles.titleRow}>
+            <Pressable onPress={toggleCheck} hitSlop={8}>
+              <View
+                style={[styles.checkbox, completed && styles.checkboxChecked]}
+              >
+                <Animated.View style={checkFillStyle}>
+                  <Ionicons
+                    name="checkmark"
+                    size={13}
+                    color={AppColors.white}
+                  />
+                </Animated.View>
+              </View>
+            </Pressable>
+            <Text style={[styles.title, completed && styles.titleCompleted]}>
+              {title}
+            </Text>
+          </View>
+
+          {/* Description (animated expand/collapse) */}
+          {description ? (
+            <Animated.View
+              style={[
+                styles.descriptionBlock,
+                { borderLeftColor: p.border },
+                descStyle,
+              ]}
+            >
+              <Text style={styles.description}>{description}</Text>
+            </Animated.View>
           ) : null}
-          {dueDate ? (
-            <View style={styles.metaItem}>
-              <Ionicons name="calendar-outline" size={12} color={AppColors.gray400} />
-              <Text style={styles.metaText}>{formatDate(dueDate)}</Text>
+
+          {/* Footer */}
+          {hasFooter ? (
+            <View style={styles.footer}>
+              {category && catStyle ? (
+                <View
+                  style={[
+                    styles.categoryChip,
+                    { backgroundColor: catStyle.bg },
+                  ]}
+                >
+                  <Text style={[styles.categoryText, { color: catStyle.text }]}>
+                    {category}
+                  </Text>
+                </View>
+              ) : null}
+              {dueDate ? (
+                <View style={styles.metaItem}>
+                  <Ionicons
+                    name="calendar-outline"
+                    size={12}
+                    color={AppColors.gray400}
+                  />
+                  <Text style={styles.metaText}>{formatDate(dueDate)}</Text>
+                </View>
+              ) : null}
+              {owner ? (
+                <View style={styles.metaItem}>
+                  <Ionicons
+                    name="person-outline"
+                    size={12}
+                    color={AppColors.gray400}
+                  />
+                  <Text style={styles.metaText}>{owner}</Text>
+                </View>
+              ) : null}
             </View>
           ) : null}
-          {owner ? (
-            <View style={styles.metaItem}>
-              <Ionicons name="person-outline" size={12} color={AppColors.gray400} />
-              <Text style={styles.metaText}>{owner}</Text>
-            </View>
-          ) : null}
-        </View>
-      ) : null}
+        </Animated.View>
+      </GestureDetector>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  swipeWrapper: {
     position: "relative",
+    marginHorizontal: 16,
+    marginVertical: 6,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  actionBg: {
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+  },
+  editBg: {
+    backgroundColor: AppColors.primary,
+    justifyContent: "flex-start",
+    gap: 4,
+  },
+  deleteBg: {
+    backgroundColor: AppColors.error,
+    justifyContent: "flex-end",
+    gap: 4,
+  },
+  actionText: {
+    color: AppColors.white,
+    fontWeight: "700",
+    fontSize: 14,
+  },
+  card: {
     backgroundColor: AppColors.cardBg,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: AppColors.slate100,
     padding: 14,
-    marginHorizontal: 16,
-    marginVertical: 6,
     gap: 10,
     shadowColor: AppColors.shadow,
     shadowOffset: { width: 0, height: 1 },
@@ -228,11 +327,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 0.5,
-  },
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
   },
   titleRow: {
     flexDirection: "row",
