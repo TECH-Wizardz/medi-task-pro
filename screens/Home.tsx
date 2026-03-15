@@ -1,8 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { AppColors } from "@/constants/theme";
 
 import FilterTagsContainer from "@/components/header/FilterTagContainer";
 import ProfileHeader from "@/components/header/ProfileHeader";
@@ -10,6 +8,7 @@ import ProgressBar from "@/components/header/ProgressBar";
 import TaskModal from "@/components/tasks/TaskModal";
 import TasksContainer from "@/components/tasks/TasksContainer";
 import FloatingActionButton from "@/components/ui/floating-action-button";
+import { useAppTheme } from "@/context/ThemeContext";
 import useTodoStore from "@/store/useTodoStore";
 import { LocalTodo, TodoStatus } from "@/types/Todo.type";
 
@@ -31,6 +30,9 @@ export default function HomeScreen() {
   const [editingTodo, setEditingTodo] = useState<LocalTodo | undefined>(
     undefined,
   );
+
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     fetchTodos();
@@ -72,9 +74,11 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: AppColors.white,
-  },
-});
+function createStyles(colors: ReturnType<typeof useAppTheme>["colors"]) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+  });
+}

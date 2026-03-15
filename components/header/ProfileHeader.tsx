@@ -1,6 +1,6 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Image } from "expo-image";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, {
   cancelAnimation,
@@ -12,10 +12,11 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { toast } from "@/components/ui/Toast";
-import { AppColors, Colors } from "@/constants/theme";
+import { useAppTheme } from "@/context/ThemeContext";
 import { useAutoSync } from "@/hooks/use-auto-sync";
 import useTodoStore from "@/store/useTodoStore";
 import { getGreeting } from "@/utils/getGreeting.util";
+import { ThemeColors } from "@/constants/theme";
 
 export default function ProfileHeader() {
   useAutoSync();
@@ -23,6 +24,9 @@ export default function ProfileHeader() {
   const todos = useTodoStore((s) => s.todos);
   const isLoading = useTodoStore((s) => s.isLoading);
   const syncWithServer = useTodoStore((s) => s.syncWithServer);
+
+  const { colors, scheme, toggleTheme } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const hasPending = todos.some(
     (t) => t.syncStatus === "pending" || t.syncStatus === "deleted",
@@ -70,6 +74,14 @@ export default function ProfileHeader() {
         <Text style={styles.name}>Dr. Nimal</Text>
       </View>
 
+      <Pressable onPress={toggleTheme} hitSlop={8} style={styles.themeBtn}>
+        <Ionicons
+          name={scheme === "dark" ? "sunny-outline" : "moon-outline"}
+          size={22}
+          color={colors.icon}
+        />
+      </Pressable>
+
       <Pressable
         style={styles.syncBadge}
         onPress={hasPending ? handleManualSync : undefined}
@@ -78,13 +90,13 @@ export default function ProfileHeader() {
       >
         {isSyncing ? (
           <Animated.View style={spinStyle}>
-            <Ionicons name="sync-outline" size={24} color={AppColors.warning} />
+            <Ionicons name="sync-outline" size={24} color={colors.warning} />
           </Animated.View>
         ) : (
           <Ionicons
             name="cloud-done-outline"
             size={24}
-            color={AppColors.success}
+            color={colors.success}
           />
         )}
       </Pressable>
@@ -92,35 +104,44 @@ export default function ProfileHeader() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-  },
-  textContainer: {
-    flex: 1,
-    flexDirection: "column",
-  },
-  greeting: {
-    fontSize: 14,
-    color: Colors.light.icon,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  syncBadge: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 12,
+    },
+    avatar: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+    },
+    textContainer: {
+      flex: 1,
+      flexDirection: "column",
+    },
+    greeting: {
+      fontSize: 14,
+      color: colors.icon,
+    },
+    name: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: colors.gray900,
+    },
+    themeBtn: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    syncBadge: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+  });
+}

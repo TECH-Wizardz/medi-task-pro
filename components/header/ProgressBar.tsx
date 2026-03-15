@@ -1,7 +1,9 @@
 import { LinearGradient } from "expo-linear-gradient";
+import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { Colors } from "@/constants/theme";
+import { ThemeColors } from "@/constants/theme";
+import { useAppTheme } from "@/context/ThemeContext";
 
 type Props = {
   label?: string;
@@ -14,6 +16,9 @@ export default function ProgressBar({
   completed,
   total,
 }: Props) {
+  const { colors } = useAppTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return (
@@ -24,7 +29,7 @@ export default function ProgressBar({
       </View>
       <View style={styles.track}>
         <LinearGradient
-          colors={[Colors.light.primary, Colors.light.primaryLight]}
+          colors={[colors.primary, colors.primaryLight]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={[styles.fill, { width: `${percentage}%` }]}
@@ -37,40 +42,42 @@ export default function ProgressBar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    color: Colors.light.gray700,
-  },
-  percentage: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: Colors.light.primary,
-  },
-  track: {
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.light.gray200,
-    overflow: "hidden",
-  },
-  fill: {
-    height: "100%",
-    borderRadius: 6,
-  },
-  subtext: {
-    fontSize: 12,
-    color: Colors.light.gray400,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 8,
+    },
+    header: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: "700",
+      letterSpacing: 0.8,
+      color: colors.gray700,
+    },
+    percentage: {
+      fontSize: 14,
+      fontWeight: "700",
+      color: colors.primary,
+    },
+    track: {
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: colors.gray200,
+      overflow: "hidden",
+    },
+    fill: {
+      height: "100%",
+      borderRadius: 6,
+    },
+    subtext: {
+      fontSize: 12,
+      color: colors.gray400,
+    },
+  });
+}
